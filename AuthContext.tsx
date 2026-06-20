@@ -1,79 +1,105 @@
-import { useState, FormEvent } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { X, Mail, Lock, User as UserIcon } from 'lucide-react';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { ShoppingBag, CheckCircle2 } from "lucide-react";
 
-export function AuthModal() {
-  const { isAuthModalOpen, closeAuthModal, login } = useAuth();
-  const [isLogin, setIsLogin] = useState(true);
-  
-  if (!isAuthModalOpen) return null;
+type CartItem = {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  image?: string;
+};
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    login("user@example.com", "John Doe");
-    closeAuthModal();
+type CartContextType = {
+  items: CartItem[];
+  addToCart: (product: any) => void;
+  removeFromCart: (id: number) => void;
+  updateQuantity: (id: number, quantity: number) => void;
+  clearCart: () => void;
+  cartCount: number;
+  cartTotal: number;
+  isCartOpen: boolean;
+  openCart: () => void;
+  closeCart: () => void;
+};
+
+const CartContext = createContext<CartContextType | undefined>(undefined);
+
+export function CartProvider({ children }: { children: ReactNode }) {
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState<{title: string, message: string} | null>(null);
+
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => {
+        setToastMessage(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
+
+  const addToCart = (product: any) => {
+    setItems((prev) => {
+      const existing = prev.find((item) => item.id === product.id);
+      if (existing) {
+        return prev.map((item) =>
+          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+        );
+      }
+      return [...prev, { id: product.id, name: product.name, price: product.price, quantity: 1, image: product.image }];
+    });
+    setToastMessage({
+      title: "Added to Cart",
+      message: `${product.name} has been added to your cart.`
+    });
   };
 
+  const removeFromCart = (id: number) => {
+    setItems(items.filter(item => item.id !== id));
+  };
+
+  const updateQuantity = (id: number, quantity: number) => {
+    if (quantity <= 0) {
+      removeFromCart(id);
+      return;
+    }
+    setItems(items.map(item => item.id === id ? { ...item, quantity } : item));
+  };
+
+  const clearCart = () => setItems([]);
+
+  const openCart = () => setIsCartOpen(true);
+  const closeCart = () => setIsCartOpen(false);
+
+  const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const cartTotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden relative animate-in fade-in zoom-in duration-300">
-        <button 
-          onClick={closeAuthModal}
-          className="absolute right-4 top-4 text-gray-400 hover:text-gray-800 transition-colors z-10"
-        >
-          <X size={24} />
-        </button>
-        
-        <div className="p-8">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
-            <p className="text-gray-500 text-sm">
-              {isLogin ? 'Enter your details to access your account' : 'Join CD Bites to start ordering'}
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Full Name</label>
-                <div className="relative">
-                  <UserIcon size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input type="text" required placeholder="John Doe" className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#f36b21] focus:ring-2 focus:ring-orange-500/20 transition-all" />
-                </div>
-              </div>
-            )}
-            
-            <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Email Address</label>
-              <div className="relative">
-                <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input type="email" required placeholder="john@example.com" className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#f36b21] focus:ring-2 focus:ring-orange-500/20 transition-all" />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Password</label>
-              <div className="relative">
-                <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input type="password" required placeholder="••••••••" className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#f36b21] focus:ring-2 focus:ring-orange-500/20 transition-all" />
-              </div>
-            </div>
-
-            <button type="submit" className="w-full bg-[#f36b21] hover:bg-orange-600 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-orange-500/30 active:scale-[0.98] mt-4">
-              {isLogin ? 'Sign In' : 'Create Account'}
-            </button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <button 
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-sm text-gray-600 hover:text-[#f36b21] font-medium transition-colors"
-            >
-              {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
-            </button>
-          </div>
+    <CartContext.Provider value={{ 
+      items, addToCart, removeFromCart, updateQuantity, clearCart, 
+      cartCount, cartTotal, isCartOpen, openCart, closeCart 
+    }}>
+      {children}
+      {/* Toast Notification */}
+      <div 
+        className={`fixed bottom-4 right-4 bg-white border border-gray-100 shadow-xl p-4 flex gap-4 items-start rounded-xl transform transition-all duration-300 z-[100] ${toastMessage ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}`}
+      >
+        <div className="text-green-500 bg-green-50 p-2 rounded-full">
+          <CheckCircle2 size={24} />
+        </div>
+        <div>
+           <h4 className="font-bold text-gray-800 text-sm tracking-tight">{toastMessage?.title}</h4>
+           <p className="text-xs text-gray-500 font-medium">{toastMessage?.message}</p>
         </div>
       </div>
-    </div>
+    </CartContext.Provider>
   );
+}
+
+export function useCart() {
+  const context = useContext(CartContext);
+  if (!context) {
+    throw new Error('useCart must be used within a CartProvider');
+  }
+  return context;
 }

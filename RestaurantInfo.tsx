@@ -1,169 +1,105 @@
-import { useCart } from '../context/CartContext';
-import { X, ShoppingCart, Trash2, Plus, Minus, ArrowRight, Clock, Info } from 'lucide-react';
-import { CheckoutModal } from './CheckoutModal';
-import { useState, useEffect } from 'react';
+import { useState, useRef, useEffect, FormEvent } from 'react';
+import { X, Send, Bot, User } from 'lucide-react';
 
-export function CartDrawer() {
-  const { items, isCartOpen, closeCart, removeFromCart, updateQuantity, cartTotal, clearCart } = useCart();
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [deliveryEstimate, setDeliveryEstimate] = useState({ min: 30, max: 45, status: 'Normal' });
+interface AIChatModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export function AIChatModal({ isOpen, onClose }: AIChatModalProps) {
+  const [messages, setMessages] = useState<{sender: 'ai' | 'user', text: string}[]>([
+    { sender: 'ai', text: 'Hello! I am your CD Bites assistant. How can I help you today?' }
+  ]);
+  const [input, setInput] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Simulate dynamic delivery time based on current time and "volume"
-    const calculateDeliveryTime = () => {
-      const hour = new Date().getHours();
-      let min = 30;
-      let max = 45;
-      let status = 'Normal';
+    if (isOpen) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isOpen]);
 
-      // Simulate busy hours (lunch and dinner)
-      if ((hour >= 12 && hour <= 14) || (hour >= 19 && hour <= 21)) {
-        min = 45;
-        max = 60;
-        status = 'High Volume';
-      } else if (hour >= 22 || hour <= 6) {
-        min = 20;
-        max = 35;
-        status = 'Fast Preparation';
-      }
+  if (!isOpen) return null;
 
-      // Add extra time based on cart size
-      const itemToExtraTimeRatio = Math.floor(items.length / 3) * 5; 
-      min += itemToExtraTimeRatio;
-      max += itemToExtraTimeRatio;
+  const handleSend = (e: FormEvent) => {
+    e.preventDefault();
+    if (!input.trim()) return;
 
-      setDeliveryEstimate({ min, max, status });
-    };
+    setMessages(prev => [...prev, { sender: 'user', text: input }]);
+    const currentInput = input;
+    setInput('');
 
-    calculateDeliveryTime();
-    const interval = setInterval(calculateDeliveryTime, 60000); // Recalculate every minute
-    return () => clearInterval(interval);
-  }, [items.length]);
-
-  if (!isCartOpen) return null;
-
-  const handleCheckout = () => {
-    setIsCheckoutOpen(true);
+    // Simulate AI response
+    setTimeout(() => {
+      let reply = "I'm a smart assistant working on learning all about our menu! For now, try asking me about our pizzas, coffee, or booking a table.";
+      
+      const lower = currentInput.toLowerCase();
+      if (lower.includes('pizza')) reply = "Our Spicy Chicken Pizza is a fan favorite! Check out the Chef's Special on the menu.";
+      if (lower.includes('coffee') || lower.includes('drink')) reply = "We have an excellent selection of freshly roasted coffee and summer mocktails. You can find them in the drinks section.";
+      if (lower.includes('book') || lower.includes('table')) reply = "You can easily book a table right here on our website. Just head to the 'Book a Table' section and fill in your details.";
+      if (lower.includes('hello') || lower.includes('hi')) reply = "Hi there! Ready to order something delicious?";
+      
+      setMessages(prev => [...prev, { sender: 'ai', text: reply }]);
+    }, 1000);
   };
 
   return (
-    <>
-      <div 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[150] transition-opacity"
-        onClick={closeCart}
-      />
-      
-      <div className="fixed inset-y-0 right-0 w-full md:w-[400px] bg-white z-[160] shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out">
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden relative animate-in fade-in zoom-in duration-300 flex flex-col h-[600px] max-h-[90vh]">
+        
+        {/* Header */}
+        <div className="bg-gray-900 text-white p-4 flex justify-between items-center flex-shrink-0 shadow-md z-10">
           <div className="flex items-center gap-3">
-            <div className="bg-[#f36b21]/10 p-2 rounded-full text-[#f36b21]">
-              <ShoppingCart size={24} />
-            </div>
-            <h2 className="text-xl font-bold text-gray-800">Your Cart</h2>
+             <div className="bg-[#f36b21] p-2 rounded-full">
+               <Bot size={20} />
+             </div>
+             <div>
+               <h3 className="font-bold tracking-wide">AI Assistant</h3>
+               <p className="text-[10px] text-green-400 flex items-center gap-1">
+                 <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span> Online
+               </p>
+             </div>
           </div>
-          <button 
-            onClick={closeCart}
-            className="p-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-all"
-          >
+          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
             <X size={24} />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
-          {items.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center text-gray-500 space-y-4">
-              <ShoppingCart size={64} className="text-gray-300" />
-              <p className="text-lg font-medium">Your cart is empty</p>
-              <button 
-                onClick={closeCart}
-                className="text-[#f36b21] hover:underline font-bold"
-              >
-                Continue Shopping
-              </button>
+        {/* Chat Area */}
+        <div className="flex-1 overflow-y-auto p-4 bg-gray-50 flex flex-col gap-4">
+          {messages.map((msg, idx) => (
+            <div key={idx} className={`flex gap-3 max-w-[85%] ${msg.sender === 'user' ? 'ml-auto flex-row-reverse' : ''}`}>
+               <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${msg.sender === 'user' ? 'bg-gray-200 text-gray-700' : 'bg-[#f36b21] text-white'}`}>
+                 {msg.sender === 'user' ? <User size={16} /> : <Bot size={16} />}
+               </div>
+               <div className={`p-3 rounded-2xl text-sm ${msg.sender === 'user' ? 'bg-gray-900 text-white rounded-tr-none' : 'bg-white border border-gray-200 text-gray-800 rounded-tl-none shadow-sm'}`}>
+                 {msg.text}
+               </div>
             </div>
-          ) : (
-            <div className="space-y-6">
-              {items.map(item => (
-                <div key={item.id} className="flex gap-4 items-center bg-white border border-gray-100 p-4 rounded-xl shadow-sm">
-                  {item.image && (
-                    <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-lg" />
-                  )}
-                  <div className="flex-1">
-                    <h4 className="font-bold text-gray-800 text-sm line-clamp-1 mb-1">{item.name}</h4>
-                    <div className="text-[#f36b21] font-bold">৳{item.price.toFixed(2)}</div>
-                    
-                    <div className="flex items-center gap-3 mt-2">
-                      <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-1 border border-gray-100">
-                        <button 
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          className="w-6 h-6 flex items-center justify-center text-gray-500 hover:bg-white hover:shadow-sm rounded transition-all"
-                        >
-                          <Minus size={14} />
-                        </button>
-                        <span className="text-sm font-bold w-4 text-center">{item.quantity}</span>
-                        <button 
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="w-6 h-6 flex items-center justify-center text-gray-500 hover:bg-white hover:shadow-sm rounded transition-all"
-                        >
-                          <Plus size={14} />
-                        </button>
-                      </div>
-                      <button 
-                        onClick={() => removeFromCart(item.id)}
-                        className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors ml-auto"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          ))}
+          <div ref={messagesEndRef} />
         </div>
 
-        {items.length > 0 && (
-          <div className="border-t border-gray-100 p-6 bg-gray-50/50">
-            {/* Delivery Estimate */}
-            <div className="mb-6 p-4 bg-orange-50/50 border border-orange-100 rounded-xl flex items-start gap-3">
-              <Clock className="text-[#f36b21] shrink-0 mt-0.5" size={18} />
-              <div className="flex-1">
-                <div className="flex justify-between items-center mb-1">
-                  <h5 className="font-bold text-gray-800 text-sm">Estimated Delivery</h5>
-                  <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-sm ${
-                    deliveryEstimate.status === 'High Volume' ? 'bg-orange-100 text-orange-700' : 
-                    deliveryEstimate.status === 'Fast Preparation' ? 'bg-green-100 text-green-700' : 
-                    'bg-gray-200 text-gray-700'
-                  }`}>
-                    {deliveryEstimate.status}
-                  </span>
-                </div>
-                <p className="text-[#f36b21] font-bold text-lg">{deliveryEstimate.min} - {deliveryEstimate.max} <span className="text-sm font-medium text-gray-600">mins</span></p>
-                <div className="flex items-center gap-1 mt-2 text-xs text-gray-500">
-                  <Info size={12} />
-                  <span>Based on current kitchen volume</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center mb-6">
-              <span className="text-gray-500 font-medium">Subtotal</span>
-              <span className="text-2xl font-bold text-gray-900">৳{cartTotal.toFixed(2)}</span>
-            </div>
+        {/* Input Area */}
+        <div className="p-4 bg-white border-t border-gray-100 flex-shrink-0">
+          <form onSubmit={handleSend} className="flex gap-2">
+            <input 
+              type="text" 
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Type your message..." 
+              className="flex-1 px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:border-[#f36b21] focus:ring-2 focus:ring-orange-500/20 text-sm transition-all bg-gray-50 focus:bg-white"
+            />
             <button 
-              onClick={handleCheckout}
-              className="w-full bg-[#f36b21] hover:bg-orange-600 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-orange-500/30 active:scale-[0.98] flex items-center justify-center gap-2 text-lg"
+              type="submit"
+              disabled={!input.trim()}
+              className="bg-[#f36b21] hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed text-white p-3 rounded-xl transition-all shadow-md active:scale-95"
             >
-              Checkout <ArrowRight size={20} />
+              <Send size={20} className={input.trim() ? "ml-1" : ""} />
             </button>
-          </div>
-        )}
+          </form>
+        </div>
       </div>
-      
-      <CheckoutModal 
-        isOpen={isCheckoutOpen} 
-        onClose={() => setIsCheckoutOpen(false)} 
-      />
-    </>
+    </div>
   );
 }

@@ -1,59 +1,85 @@
-import { MessageCircle, Bot, PhoneCall } from "lucide-react";
-import { useState } from "react";
-import { AIChatModal } from "./AIChatModal";
+import { createContext, useContext, useState, ReactNode, useRef, useCallback } from 'react';
+import { CheckCircle2, Info, XCircle, X } from 'lucide-react';
 
-export function FloatingButtons() {
-  const [isAIChatOpen, setIsAIChatOpen] = useState(false);
+type ToastType = 'success' | 'info' | 'error';
+type Toast = { id: number; title: string; message: string; type: ToastType };
 
-  const handleCall = () => {
-    window.location.href = "tel:01829473901";
+interface ToastContextType {
+  addToast: (title: string, message: string, type?: ToastType) => void;
+}
+
+const ToastContext = createContext<ToastContextType | undefined>(undefined);
+
+export function ToastProvider({ children }: { children: ReactNode }) {
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const lastToastRef = useRef<number>(0);
+
+  const addToast = useCallback((title: string, message: string, type: ToastType = 'info') => {
+    // Debounce: prevent adding same/any toast if last one was < 500ms ago
+    const now = Date.now();
+    if (now - lastToastRef.current < 300) return;
+    lastToastRef.current = now;
+
+    const id = Date.now();
+    setToasts(prev => {
+      // prevent duplicate messages
+      if (prev.some(t => t.message === message)) return prev;
+      return [...prev, { id, title, message, type }];
+    });
+
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 5000);
+  }, []);
+
+  const closeToast = (id: number) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
+
+  const closeAll = () => {
+    setToasts([]);
   };
 
   return (
-    <>
-      <div className="fixed bottom-6 left-6 z-[90] flex flex-col gap-4">
-        {/* AI Button */}
-        <button 
-          className="w-12 h-12 md:w-14 md:h-14 bg-purple-600 text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(147,51,234,0.5)] hover:bg-purple-700 hover:scale-110 active:scale-95 transition-all group relative"
-          onClick={() => setIsAIChatOpen(true)}
-        >
-          <Bot className="w-6 h-6 md:w-7 md:h-7" />
-          <span className="absolute left-14 md:left-16 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-lg">
-            Ask AI Assistant
-          </span>
-        </button>
-      </div>
-
-      <div className="fixed bottom-6 right-6 z-[90] flex flex-col gap-4">
-        {/* Phone Call Button */}
-        <button 
-          onClick={handleCall}
-          className="w-12 h-12 md:w-14 md:h-14 bg-red-600 text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(220,38,38,0.5)] hover:bg-red-700 hover:scale-110 active:scale-95 transition-all group relative"
-        >
-          <PhoneCall className="w-6 h-6 md:w-7 md:h-7" />
-          <span className="absolute right-14 md:right-16 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-lg">
-            Call Now
-          </span>
-        </button>
-
-        {/* WhatsApp Button */}
-        <a 
-          href="https://wa.me/01829473901" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="w-12 h-12 md:w-14 md:h-14 bg-[#25D366] text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(37,211,102,0.5)] hover:bg-[#20bd5a] hover:scale-110 active:scale-95 transition-all group relative"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 md:w-8 md:h-8 fill-current stroke-none"><path d="M17.498 14.382c-.301-.15-1.767-.867-2.04-.966-.273-.101-.473-.15-.673.15-.197.295-.771.964-.944 1.162-.175.195-.349.21-.646.075-.3-.15-1.263-.465-2.403-1.485-.888-.795-1.484-1.77-1.66-2.07-.174-.3-.019-.465.13-.615.136-.135.301-.345.451-.525.146-.18.196-.3.296-.51.1-.21.046-.39-.031-.54-.075-.15-.672-1.62-.922-2.206-.24-.579-.492-.501-.672-.51-.174-.009-.374-.009-.574-.009-.2 0-.527.075-.802.375-.274.3-1.046 1.02-1.046 2.49 0 1.47 1.072 2.88 1.22 3.075.15.196 2.096 3.2 5.077 4.485.709.301 1.262.48 1.694.615.711.225 1.359.195 1.871.12.576-.09 1.767-.721 2.016-1.426.246-.705.246-1.305.174-1.425-.075-.12-.275-.195-.576-.345z"></path><path d="M20.52 3.449A11.96 11.96 0 0012 0C5.385 0 0 5.384 0 12.001c0 2.12.553 4.195 1.603 6.015L.145 24l6.14-1.611a11.933 11.933 0 005.715 1.446h.005c6.613 0 12-5.385 12-12.002 0-3.21-1.248-6.22-3.485-8.384zm-8.52 18.256c-1.802 0-3.565-.48-5.111-1.395l-.366-.211-3.799.996.996-3.705-.241-.375A9.972 9.972 0 012.003 12c0-5.505 4.496-10 10.005-10 2.671 0 5.176 1.036 7.065 2.925A9.957 9.957 0 0122.002 12c0 5.505-4.496 10-10.003 10z"></path></svg>
-          <span className="absolute right-14 md:right-16 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-lg">
-            Message us on WhatsApp
-          </span>
-        </a>
-      </div>
-      
-      <AIChatModal 
-        isOpen={isAIChatOpen}
-        onClose={() => setIsAIChatOpen(false)}
-      />
-    </>
+    <ToastContext.Provider value={{ addToast }}>
+      {children}
+      {toasts.length > 0 && (
+        <div className="fixed bottom-4 right-4 z-[250] flex flex-col items-end gap-2 pointer-events-none">
+          {toasts.length > 1 && (
+            <button 
+              onClick={closeAll}
+              className="text-xs bg-gray-800 text-white px-3 py-1.5 rounded-full shadow-md hover:bg-gray-700 pointer-events-auto transition-colors z-[251]"
+            >
+              Clear All
+            </button>
+          )}
+          <div className="flex flex-col gap-2 max-h-[60vh] overflow-y-auto pr-1 pb-1 scrollbar-hide pointer-events-auto w-80">
+            {toasts.map(toast => (
+              <div key={toast.id} className="bg-white border border-gray-100 shadow-xl p-4 rounded-xl flex gap-3 items-start animate-in fade-in slide-in-from-bottom-5 w-full relative group">
+                <div className={`p-2 rounded-full flex-shrink-0 ${toast.type === 'success' ? 'text-green-500 bg-green-50' : toast.type === 'error' ? 'text-red-500 bg-red-50' : 'text-[#f36b21] bg-orange-50'}`}>
+                  {toast.type === 'success' ? <CheckCircle2 size={24} /> : toast.type === 'error' ? <XCircle size={24} /> : <Info size={24} />}
+                </div>
+                <div className="flex-1 pt-1 overflow-hidden">
+                  <h4 className="font-bold text-gray-800 text-sm tracking-tight truncate">{toast.title}</h4>
+                  <p className="text-xs text-gray-500 font-medium leading-relaxed line-clamp-2 md:line-clamp-3 mt-1">{toast.message}</p>
+                </div>
+                <button 
+                  onClick={() => closeToast(toast.id)}
+                  className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity rounded-md hover:bg-gray-100"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </ToastContext.Provider>
   );
 }
+
+export const useToast = () => {
+  const context = useContext(ToastContext);
+  if (!context) throw new Error("useToast must be used within ToastProvider");
+  return context;
+};

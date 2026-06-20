@@ -1,88 +1,169 @@
-import { Twitter, Facebook, Dribbble, Youtube, MapPin, Phone, Mail } from "lucide-react";
+import { useCart } from '../context/CartContext';
+import { X, ShoppingCart, Trash2, Plus, Minus, ArrowRight, Clock, Info } from 'lucide-react';
+import { CheckoutModal } from './CheckoutModal';
+import { useState, useEffect } from 'react';
 
-export function Footer() {
+export function CartDrawer() {
+  const { items, isCartOpen, closeCart, removeFromCart, updateQuantity, cartTotal, clearCart } = useCart();
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [deliveryEstimate, setDeliveryEstimate] = useState({ min: 30, max: 45, status: 'Normal' });
+
+  useEffect(() => {
+    // Simulate dynamic delivery time based on current time and "volume"
+    const calculateDeliveryTime = () => {
+      const hour = new Date().getHours();
+      let min = 30;
+      let max = 45;
+      let status = 'Normal';
+
+      // Simulate busy hours (lunch and dinner)
+      if ((hour >= 12 && hour <= 14) || (hour >= 19 && hour <= 21)) {
+        min = 45;
+        max = 60;
+        status = 'High Volume';
+      } else if (hour >= 22 || hour <= 6) {
+        min = 20;
+        max = 35;
+        status = 'Fast Preparation';
+      }
+
+      // Add extra time based on cart size
+      const itemToExtraTimeRatio = Math.floor(items.length / 3) * 5; 
+      min += itemToExtraTimeRatio;
+      max += itemToExtraTimeRatio;
+
+      setDeliveryEstimate({ min, max, status });
+    };
+
+    calculateDeliveryTime();
+    const interval = setInterval(calculateDeliveryTime, 60000); // Recalculate every minute
+    return () => clearInterval(interval);
+  }, [items.length]);
+
+  if (!isCartOpen) return null;
+
+  const handleCheckout = () => {
+    setIsCheckoutOpen(true);
+  };
+
   return (
-    <footer className="bg-[#222222] border-t-4 border-[#f36b21]">
-      <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-10 md:py-16 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-8 justify-between">
-        
-        {/* About */}
-        <div className="col-span-1 sm:col-span-2 md:col-span-2">
-          <div className="font-bold text-3xl tracking-tighter text-white mb-6">
-            <span className="text-[#f36b21]">CD Bites</span>
+    <>
+      <div 
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[150] transition-opacity"
+        onClick={closeCart}
+      />
+      
+      <div className="fixed inset-y-0 right-0 w-full md:w-[400px] bg-white z-[160] shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out">
+        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+          <div className="flex items-center gap-3">
+            <div className="bg-[#f36b21]/10 p-2 rounded-full text-[#f36b21]">
+              <ShoppingCart size={24} />
+            </div>
+            <h2 className="text-xl font-bold text-gray-800">Your Cart</h2>
           </div>
-          <p className="text-[13px] text-gray-400 mb-6 leading-relaxed">
-            CD Bites Cafe and Restaurant offers a cosy, trendy atmosphere for breakfast, brunch, lunch, and dinner. 
-            Enjoy great coffee, delicious desserts, and halal food with top-tier service.
-          </p>
-          <div className="flex gap-2">
-            <a href="https://www.facebook.com/CDBitesChuadanga/menu/" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded bg-[#f36b21] text-white flex justify-center items-center hover:bg-orange-600 transition"><Facebook size={14} fill="currentColor" /></a>
-            <a href="https://wa.me/01829473901" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded bg-gray-800 text-white flex justify-center items-center hover:bg-[#25D366] transition">
-               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="fill-current stroke-none"><path d="M17.498 14.382c-.301-.15-1.767-.867-2.04-.966-.273-.101-.473-.15-.673.15-.197.295-.771.964-.944 1.162-.175.195-.349.21-.646.075-.3-.15-1.263-.465-2.403-1.485-.888-.795-1.484-1.77-1.66-2.07-.174-.3-.019-.465.13-.615.136-.135.301-.345.451-.525.146-.18.196-.3.296-.51.1-.21.046-.39-.031-.54-.075-.15-.672-1.62-.922-2.206-.24-.579-.492-.501-.672-.51-.174-.009-.374-.009-.574-.009-.2 0-.527.075-.802.375-.274.3-1.046 1.02-1.046 2.49 0 1.47 1.072 2.88 1.22 3.075.15.196 2.096 3.2 5.077 4.485.709.301 1.262.48 1.694.615.711.225 1.359.195 1.871.12.576-.09 1.767-.721 2.016-1.426.246-.705.246-1.305.174-1.425-.075-.12-.275-.195-.576-.345z"></path><path d="M20.52 3.449A11.96 11.96 0 0012 0C5.385 0 0 5.384 0 12.001c0 2.12.553 4.195 1.603 6.015L.145 24l6.14-1.611a11.933 11.933 0 005.715 1.446h.005c6.613 0 12-5.385 12-12.002 0-3.21-1.248-6.22-3.485-8.384zm-8.52 18.256c-1.802 0-3.565-.48-5.111-1.395l-.366-.211-3.799.996.996-3.705-.241-.375A9.972 9.972 0 012.003 12c0-5.505 4.496-10 10.005-10 2.671 0 5.176 1.036 7.065 2.925A9.957 9.957 0 0122.002 12c0 5.505-4.496 10-10.003 10z"></path></svg>
-            </a>
-            <a href="#top" className="w-8 h-8 rounded bg-gray-800 text-white flex justify-center items-center hover:bg-[#f36b21] transition"><Twitter size={14} /></a>
-            <a href="#top" className="w-8 h-8 rounded bg-gray-800 text-white flex justify-center items-center hover:bg-[#f36b21] transition"><Dribbble size={14} /></a>
-            <a href="#top" className="w-8 h-8 rounded bg-gray-800 text-white flex justify-center items-center hover:bg-[#f36b21] transition"><Youtube size={14} /></a>
+          <button 
+            onClick={closeCart}
+            className="p-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-all"
+          >
+            <X size={24} />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6">
+          {items.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-center text-gray-500 space-y-4">
+              <ShoppingCart size={64} className="text-gray-300" />
+              <p className="text-lg font-medium">Your cart is empty</p>
+              <button 
+                onClick={closeCart}
+                className="text-[#f36b21] hover:underline font-bold"
+              >
+                Continue Shopping
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {items.map(item => (
+                <div key={item.id} className="flex gap-4 items-center bg-white border border-gray-100 p-4 rounded-xl shadow-sm">
+                  {item.image && (
+                    <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-lg" />
+                  )}
+                  <div className="flex-1">
+                    <h4 className="font-bold text-gray-800 text-sm line-clamp-1 mb-1">{item.name}</h4>
+                    <div className="text-[#f36b21] font-bold">৳{item.price.toFixed(2)}</div>
+                    
+                    <div className="flex items-center gap-3 mt-2">
+                      <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-1 border border-gray-100">
+                        <button 
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          className="w-6 h-6 flex items-center justify-center text-gray-500 hover:bg-white hover:shadow-sm rounded transition-all"
+                        >
+                          <Minus size={14} />
+                        </button>
+                        <span className="text-sm font-bold w-4 text-center">{item.quantity}</span>
+                        <button 
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          className="w-6 h-6 flex items-center justify-center text-gray-500 hover:bg-white hover:shadow-sm rounded transition-all"
+                        >
+                          <Plus size={14} />
+                        </button>
+                      </div>
+                      <button 
+                        onClick={() => removeFromCart(item.id)}
+                        className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors ml-auto"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {items.length > 0 && (
+          <div className="border-t border-gray-100 p-6 bg-gray-50/50">
+            {/* Delivery Estimate */}
+            <div className="mb-6 p-4 bg-orange-50/50 border border-orange-100 rounded-xl flex items-start gap-3">
+              <Clock className="text-[#f36b21] shrink-0 mt-0.5" size={18} />
+              <div className="flex-1">
+                <div className="flex justify-between items-center mb-1">
+                  <h5 className="font-bold text-gray-800 text-sm">Estimated Delivery</h5>
+                  <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-sm ${
+                    deliveryEstimate.status === 'High Volume' ? 'bg-orange-100 text-orange-700' : 
+                    deliveryEstimate.status === 'Fast Preparation' ? 'bg-green-100 text-green-700' : 
+                    'bg-gray-200 text-gray-700'
+                  }`}>
+                    {deliveryEstimate.status}
+                  </span>
+                </div>
+                <p className="text-[#f36b21] font-bold text-lg">{deliveryEstimate.min} - {deliveryEstimate.max} <span className="text-sm font-medium text-gray-600">mins</span></p>
+                <div className="flex items-center gap-1 mt-2 text-xs text-gray-500">
+                  <Info size={12} />
+                  <span>Based on current kitchen volume</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center mb-6">
+              <span className="text-gray-500 font-medium">Subtotal</span>
+              <span className="text-2xl font-bold text-gray-900">৳{cartTotal.toFixed(2)}</span>
+            </div>
+            <button 
+              onClick={handleCheckout}
+              className="w-full bg-[#f36b21] hover:bg-orange-600 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-orange-500/30 active:scale-[0.98] flex items-center justify-center gap-2 text-lg"
+            >
+              Checkout <ArrowRight size={20} />
+            </button>
           </div>
-        </div>
-
-        {/* Information */}
-        <div className="col-span-1">
-          <h4 className="text-white font-bold text-sm mb-6 uppercase tracking-wider">Features</h4>
-          <ul className="text-[13px] text-gray-400 flex flex-col gap-3">
-            <li><span className="text-gray-400">Free Wi-Fi</span></li>
-            <li><span className="text-gray-400">Kids' Menu</span></li>
-            <li><span className="text-gray-400">Dine-in & Takeaway</span></li>
-            <li><span className="text-gray-400">Delivery Options</span></li>
-            <li><span className="text-gray-400">Wheelchair Accessible</span></li>
-          </ul>
-        </div>
-
-        {/* Hours */}
-        <div className="col-span-1">
-          <h4 className="text-white font-bold text-sm mb-6 uppercase tracking-wider">Opening Hours</h4>
-          <ul className="text-[13px] text-gray-400 flex flex-col gap-3">
-            <li className="flex justify-between"><span>Mon - Thu</span> <span>10:00 AM - 8:30 PM</span></li>
-            <li className="flex justify-between"><span>Friday</span> <span>3:00 PM - 8:30 PM</span></li>
-            <li className="flex justify-between"><span>Sat - Sun</span> <span>10:00 AM - 8:30 PM</span></li>
-          </ul>
-        </div>
-
-        {/* Contact Info */}
-        <div className="col-span-1 sm:col-span-2 md:col-span-5 lg:col-span-1 mt-6 md:mt-0">
-          <h4 className="text-white font-bold text-sm mb-6 uppercase tracking-wider">Contact Info</h4>
-          <ul className="text-[13px] text-gray-400 flex flex-col gap-4">
-            <li className="flex gap-3">
-              <span className="font-bold text-white w-20">Address:</span> 
-              <span>JRXX+73<br/>Chuadanga,<br/>Bangladesh</span>
-            </li>
-            <li className="flex gap-3">
-              <span className="font-bold text-white w-20">Phone:</span> 
-              <span>01829473901</span>
-            </li>
-            <li className="flex gap-3">
-              <span className="font-bold text-white w-20">Email:</span> 
-              <span className="hover:text-[#f36b21] transition cursor-pointer">info@cdbites.com</span>
-            </li>
-          </ul>
-        </div>
-
+        )}
       </div>
       
-      {/* Footer Bottom */}
-      <div className="border-t border-gray-800">
-        <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-6 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
-          <div className="text-xs text-gray-500">
-            Copyright © 2026 CD Bites Cafe and Restaurant. All rights reserved.
-          </div>
-          <div className="flex gap-2">
-             {/* Payment Icons placehoder */}
-             <div className="bg-gray-800 w-10 h-6 rounded flex justify-center items-center text-[8px] text-white font-bold">VISA</div>
-             <div className="bg-gray-800 w-10 h-6 rounded flex justify-center items-center text-[8px] text-white font-bold">MC</div>
-             <div className="bg-gray-800 w-10 h-6 rounded flex justify-center items-center text-[8px] text-white font-bold">AMEX</div>
-             <div className="bg-gray-800 w-10 h-6 rounded flex justify-center items-center text-[8px] text-white font-bold">DISC</div>
-          </div>
-        </div>
-      </div>
-    </footer>
+      <CheckoutModal 
+        isOpen={isCheckoutOpen} 
+        onClose={() => setIsCheckoutOpen(false)} 
+      />
+    </>
   );
 }

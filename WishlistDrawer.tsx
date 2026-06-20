@@ -1,85 +1,67 @@
-import { createContext, useContext, useState, ReactNode, useRef, useCallback } from 'react';
-import { CheckCircle2, Info, XCircle, X } from 'lucide-react';
+import { Check, ShieldCheck, MapPin, Clock, Coffee, Car, Wifi, Heart, Users, Calendar } from "lucide-react";
 
-type ToastType = 'success' | 'info' | 'error';
-type Toast = { id: number; title: string; message: string; type: ToastType };
-
-interface ToastContextType {
-  addToast: (title: string, message: string, type?: ToastType) => void;
-}
-
-const ToastContext = createContext<ToastContextType | undefined>(undefined);
-
-export function ToastProvider({ children }: { children: ReactNode }) {
-  const [toasts, setToasts] = useState<Toast[]>([]);
-  const lastToastRef = useRef<number>(0);
-
-  const addToast = useCallback((title: string, message: string, type: ToastType = 'info') => {
-    // Debounce: prevent adding same/any toast if last one was < 500ms ago
-    const now = Date.now();
-    if (now - lastToastRef.current < 300) return;
-    lastToastRef.current = now;
-
-    const id = Date.now();
-    setToasts(prev => {
-      // prevent duplicate messages
-      if (prev.some(t => t.message === message)) return prev;
-      return [...prev, { id, title, message, type }];
-    });
-
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
-    }, 5000);
-  }, []);
-
-  const closeToast = (id: number) => {
-    setToasts(prev => prev.filter(t => t.id !== id));
-  };
-
-  const closeAll = () => {
-    setToasts([]);
-  };
+export function RestaurantInfo() {
+  const features = [
+    { title: "Service Options", items: ["No-contact delivery", "Delivery", "Drive-through", "Takeaway", "Dine-in"], icon: <ShieldCheck className="w-5 h-5 text-[#f36b21]" /> },
+    { title: "Highlights", items: ["Fireplace", "Great coffee", "Great dessert"], icon: <Coffee className="w-5 h-5 text-[#f36b21]" /> },
+    { title: "Atmosphere", items: ["Casual", "Cosy", "Quiet", "Romantic", "Trendy", "Upmarket"], icon: <Heart className="w-5 h-5 text-[#f36b21]" /> },
+    { title: "Offerings", items: ["All you can eat", "Coffee", "Halal food", "Happy-hour food", "Private dining room", "Quick bite", "Salad bar", "Small plates"], icon: <Check className="w-5 h-5 text-[#f36b21]" /> },
+    { title: "Dining Options", items: ["Breakfast", "Brunch", "Lunch", "Dinner", "Dessert", "Seating", "Table service"], icon: <Coffee className="w-5 h-5 text-[#f36b21]" /> },
+    { title: "Amenities", items: ["Toilet", "Wheelchair-accessible toilet", "Wi-Fi", "Free Wi-Fi"], icon: <Wifi className="w-5 h-5 text-[#f36b21]" /> },
+    { title: "Crowd", items: ["Family friendly", "Groups", "Tourists", "University students"], icon: <Users className="w-5 h-5 text-[#f36b21]" /> },
+    { title: "Parking & Payments", items: ["Free street parking", "NFC mobile payments"], icon: <Car className="w-5 h-5 text-[#f36b21]" /> },
+  ];
 
   return (
-    <ToastContext.Provider value={{ addToast }}>
-      {children}
-      {toasts.length > 0 && (
-        <div className="fixed bottom-4 right-4 z-[250] flex flex-col items-end gap-2 pointer-events-none">
-          {toasts.length > 1 && (
-            <button 
-              onClick={closeAll}
-              className="text-xs bg-gray-800 text-white px-3 py-1.5 rounded-full shadow-md hover:bg-gray-700 pointer-events-auto transition-colors z-[251]"
-            >
-              Clear All
-            </button>
-          )}
-          <div className="flex flex-col gap-2 max-h-[60vh] overflow-y-auto pr-1 pb-1 scrollbar-hide pointer-events-auto w-80">
-            {toasts.map(toast => (
-              <div key={toast.id} className="bg-white border border-gray-100 shadow-xl p-4 rounded-xl flex gap-3 items-start animate-in fade-in slide-in-from-bottom-5 w-full relative group">
-                <div className={`p-2 rounded-full flex-shrink-0 ${toast.type === 'success' ? 'text-green-500 bg-green-50' : toast.type === 'error' ? 'text-red-500 bg-red-50' : 'text-[#f36b21] bg-orange-50'}`}>
-                  {toast.type === 'success' ? <CheckCircle2 size={24} /> : toast.type === 'error' ? <XCircle size={24} /> : <Info size={24} />}
-                </div>
-                <div className="flex-1 pt-1 overflow-hidden">
-                  <h4 className="font-bold text-gray-800 text-sm tracking-tight truncate">{toast.title}</h4>
-                  <p className="text-xs text-gray-500 font-medium leading-relaxed line-clamp-2 md:line-clamp-3 mt-1">{toast.message}</p>
-                </div>
-                <button 
-                  onClick={() => closeToast(toast.id)}
-                  className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity rounded-md hover:bg-gray-100"
-                >
-                  <X size={14} />
-                </button>
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-10" id="about-section">
+      <div className="text-center md:text-left mb-10">
+        <span className="text-[#f36b21] font-extrabold text-[10px] sm:text-xs tracking-[0.2em] uppercase mb-2 block">Our Story & Ambience</span>
+        <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight leading-tight uppercase">About CD Bites Cafe</h2>
+        <div className="w-12 h-1.5 bg-[#f36b21] my-4 mx-auto md:mx-0 rounded-full"></div>
+        <p className="text-gray-500 max-w-3xl text-sm md:text-base leading-relaxed font-medium">
+          Experience the best dining at Swarganga's premier spot. Whether you're here for a quick bite, a romantic dinner, or an all-you-can-eat feast, our cosy and upmarket atmosphere is perfect for families, tourists, and students alike.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12">
+        {features.map((feature, idx) => (
+          <div key={idx} className="group">
+            <div className="flex items-center gap-3 mb-4 border-b border-gray-100 pb-2">
+              <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center transform group-hover:scale-110 transition-transform duration-300">
+                {feature.icon}
               </div>
-            ))}
+              <h3 className="font-bold text-sm text-gray-800 uppercase tracking-wide">{feature.title}</h3>
+            </div>
+            <ul className="space-y-2">
+              {feature.items.map((item, idy) => (
+                <li key={idy} className="text-xs text-gray-500 font-medium flex items-start gap-2">
+                  <span className="w-1 h-1 rounded-full bg-[#f36b21] mt-1.5 flex-shrink-0"></span>
+                  {item}
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
-      )}
-    </ToastContext.Provider>
+        ))}
+      </div>
+      
+      <div className="mt-12 bg-gray-50 border border-gray-100 rounded-2xl p-6 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+         <div className="flex flex-col items-center md:items-start">
+             <Calendar className="w-8 h-8 text-[#f36b21] mb-3" />
+             <h4 className="font-bold text-gray-800 mb-1">Planning Ahead?</h4>
+             <p className="text-xs text-gray-500 mb-2">Reservations recommended for lunch, brunch, and dinner.</p>
+             <a href="#booking-section" className="text-[#f36b21] hover:underline font-bold text-xs">Book a Table Now &rarr;</a>
+         </div>
+         <div className="flex flex-col items-center md:items-start">
+             <Clock className="w-8 h-8 text-[#f36b21] mb-3" />
+             <h4 className="font-bold text-gray-800 mb-1">Opening Hours</h4>
+             <p className="text-xs text-gray-500">Mon - Thu: 10:00 AM - 8:30 PM<br/>Fri: 3:00 PM - 8:30 PM<br/>Sat - Sun: 10:00 AM - 8:30 PM</p>
+         </div>
+         <div className="flex flex-col items-center md:items-start">
+             <MapPin className="w-8 h-8 text-[#f36b21] mb-3" />
+             <h4 className="font-bold text-gray-800 mb-1">Location Contact</h4>
+             <p className="text-xs text-gray-500">JRXX+73 Chuadanga, Bangladesh<br/>Tel: 01829473901</p>
+         </div>
+      </div>
+    </div>
   );
 }
-
-export const useToast = () => {
-  const context = useContext(ToastContext);
-  if (!context) throw new Error("useToast must be used within ToastProvider");
-  return context;
-};

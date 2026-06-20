@@ -1,78 +1,50 @@
-import { useState, useEffect } from 'react';
-import { Check, ChefHat, Bike, PackageCheck } from 'lucide-react';
+import { X } from 'lucide-react';
+import { OrderTracker } from './OrderTracker';
 
-const steps = [
-  { id: 1, name: 'Received', icon: Check, description: 'We have received your order' },
-  { id: 2, name: 'Preparing', icon: ChefHat, description: 'Your food is being prepared' },
-  { id: 3, name: 'Out for Delivery', icon: Bike, description: 'Your order is out for delivery' },
-  { id: 4, name: 'Delivered', icon: PackageCheck, description: 'Enjoy your meal!' }
-];
+interface TrackOrderModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  orderId?: string;
+}
 
-export function OrderTracker() {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [orderId] = useState(`CDB-${Math.floor(1000 + Math.random() * 9000)}`);
-
-  // Simulate order progression
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentStep(prev => {
-        if (prev < 4) return prev + 1;
-        clearInterval(timer);
-        return prev;
-      });
-    }, 4000); // Progress every 4 seconds for demo purposes
-
-    return () => clearInterval(timer);
-  }, []);
+export function TrackOrderModal({ isOpen, onClose, orderId }: TrackOrderModalProps) {
+  if (!isOpen) return null;
 
   return (
-    <div className="w-full h-full p-2">
-      <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-100">
-        <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Status</h3>
-        <span className="text-[#f36b21] font-bold text-sm bg-orange-50 px-3 py-1 rounded-full">#{orderId}</span>
-      </div>
-      
-      <div className="relative pl-2">
-        {/* Vertical Line */}
-        <div className="absolute left-[1.35rem] top-4 bottom-6 w-[2px] bg-gray-100" />
-        
-        {/* Progress Line */}
-        <div 
-          className="absolute left-[1.35rem] top-4 w-[2px] bg-[#f36b21] transition-all duration-700 ease-in-out"
-          style={{ height: `${((currentStep - 1) / (steps.length - 1)) * 100}%`, maxHeight: 'calc(100% - 1.5rem)' }}
-        />
-        
-        <div className="space-y-8">
-          {steps.map((step) => {
-            const Icon = step.icon;
-            const isCompleted = currentStep > step.id;
-            const isCurrent = currentStep === step.id;
-            const isPending = currentStep < step.id;
-            
-            return (
-              <div key={step.id} className="relative flex items-start group">
-                <div 
-                  className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 z-10 transition-colors duration-500
-                    ${isCompleted ? 'bg-[#f36b21] text-white shadow-md shadow-orange-500/20' : 
-                      isCurrent ? 'bg-white border-2 border-[#f36b21] text-[#f36b21] shadow-[0_0_15px_rgba(243,107,33,0.3)] scale-110' : 
-                      'bg-white border-2 border-gray-200 text-gray-300'}`}
-                >
-                  <Icon size={18} className={isCurrent ? 'animate-pulse' : ''} />
-                </div>
-                
-                <div className="ml-5 flex-1 pt-2">
-                  <h4 className={`text-sm md:text-base font-bold transition-colors duration-300 ${isCurrent ? 'text-gray-900' : isCompleted ? 'text-gray-700' : 'text-gray-400'}`}>
-                    {step.name}
-                  </h4>
-                  <p className={`text-xs mt-1 transition-colors duration-300 ${isCurrent || isCompleted ? 'text-gray-500' : 'text-gray-300'}`}>
-                    {step.description}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
+    <>
+      <div 
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] transition-opacity"
+        onClick={onClose}
+      />
+      <div className="fixed inset-0 flex items-center justify-center z-[210] p-4 pointer-events-none">
+        <div className="bg-gray-50 md:bg-white w-full max-w-lg rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden pointer-events-auto animate-in zoom-in-95 duration-200">
+          <div className="p-5 md:p-6 flex justify-between items-center border-b border-gray-100 bg-white sticky top-0 z-10 shadow-sm flex-shrink-0">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 tracking-tight">Track Your Order</h2>
+              {orderId && <p className="text-sm font-medium text-gray-500 mt-1">Order #{orderId}</p>}
+            </div>
+            <button 
+              onClick={onClose}
+              className="p-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-all"
+            >
+              <X size={24} />
+            </button>
+          </div>
+          
+          <div className="p-5 md:p-8 flex-1 overflow-y-auto scrollbar-hide bg-gray-50">
+            <OrderTracker />
+          </div>
+
+          <div className="p-5 border-t border-gray-100 bg-white flex-shrink-0">
+            <button 
+              onClick={onClose}
+              className="w-full bg-gray-900 hover:bg-[#f36b21] hover:border-[#f36b21] text-white font-bold py-3.5 rounded-xl transition-all shadow-md mt-auto"
+            >
+              Close Tracker
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
